@@ -118,4 +118,61 @@ class MurmurWindow(ctk.CTk):
     # --------------------------------------------------------- settings panel (stub — Task 11)
 
     def _show_settings(self) -> None:
-        pass   # implemented in Task 11
+        for w in self.winfo_children():
+            w.destroy()
+
+        ctk.CTkLabel(
+            self, text="SETTINGS",
+            font=ctk.CTkFont(size=11, weight="bold"), text_color="#888888",
+        ).pack(pady=(20, 0))
+
+        ctk.CTkLabel(self, text="Hotkey", font=ctk.CTkFont(size=10),
+                     text_color="#666666").pack(anchor="w", padx=24, pady=(14, 2))
+        self._hk_entry = ctk.CTkEntry(self, font=ctk.CTkFont(family="Courier", size=11))
+        self._hk_entry.pack(fill="x", padx=24)
+        self._hk_entry.insert(0, self._current_hotkey)
+        self._hk_entry.bind("<KeyPress>", self._capture_hotkey)
+
+        ctk.CTkLabel(self, text="Language", font=ctk.CTkFont(size=10),
+                     text_color="#666666").pack(anchor="w", padx=24, pady=(12, 2))
+        self._lang_menu = ctk.CTkOptionMenu(self, values=LANGUAGES)
+        self._lang_menu.pack(fill="x", padx=24)
+        self._lang_menu.set(self._current_language)
+
+        self._login_var = ctk.BooleanVar(value=self._current_login)
+        ctk.CTkSwitch(
+            self, text="Start on login", variable=self._login_var,
+            font=ctk.CTkFont(size=11),
+        ).pack(padx=24, pady=12, anchor="w")
+
+        row = ctk.CTkFrame(self, fg_color="transparent")
+        row.pack(side="bottom", fill="x", padx=16, pady=12)
+        ctk.CTkButton(row, text="Cancel", fg_color="#333333",
+                      command=self._show_main).pack(side="left")
+        ctk.CTkButton(row, text="Save",
+                      command=self._save_settings).pack(side="right")
+
+    def _capture_hotkey(self, event) -> str:
+        mods = []
+        if event.state & 0x4:      mods.append("ctrl")
+        if event.state & 0x1:      mods.append("shift")
+        if event.state & 0x20000:  mods.append("alt")
+        skip = {
+            "Control_L", "Control_R", "Shift_L", "Shift_R", "Alt_L", "Alt_R",
+            "caps_lock", "num_lock",
+        }
+        if event.keysym not in skip:
+            combo = "+".join(mods + [event.keysym.lower()])
+            self._hk_entry.delete(0, "end")
+            self._hk_entry.insert(0, combo)
+        return "break"
+
+    def _save_settings(self) -> None:
+        hotkey   = self._hk_entry.get()
+        language = self._lang_menu.get()
+        login    = self._login_var.get()
+        self._current_hotkey   = hotkey
+        self._current_language = language
+        self._current_login    = login
+        self._on_settings_save(hotkey, language, login)
+        self._show_main()
