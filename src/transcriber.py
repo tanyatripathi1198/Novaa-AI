@@ -3,12 +3,6 @@ from pathlib import Path
 from typing import Optional, Type
 import numpy as np
 
-# Import at module level to allow mocking in tests
-try:
-    from faster_whisper import WhisperModel
-except ImportError:
-    WhisperModel = None
-
 MODEL_NAME = "small"
 _MODEL_DIR = str(Path(os.environ.get("APPDATA", Path.home())) / "MurmurAI" / "models")
 
@@ -24,8 +18,15 @@ class Transcriber:
         self._model_cls = _model_cls   # injected in tests
 
     def load(self) -> None:
+        if self._model is not None:
+            return
         if self._model_cls is None:
-            cls = WhisperModel
+            try:
+                from faster_whisper import WhisperModel as cls
+            except ImportError as exc:
+                raise RuntimeError(
+                    "faster_whisper is not installed. Run: pip install faster-whisper"
+                ) from exc
         else:
             cls = self._model_cls
         self._model = cls(
