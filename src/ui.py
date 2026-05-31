@@ -1,0 +1,121 @@
+from __future__ import annotations
+import customtkinter as ctk
+from typing import Callable, Optional
+from controller import State
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
+
+_IDLE_COLOR      = "#3a3a5a"
+_RECORDING_COLOR = "#e94560"
+_TYPING_COLOR    = "#0a84ff"
+
+LANGUAGES = [
+    "auto", "en", "es", "fr", "de", "it", "pt", "ru", "ja", "zh",
+    "ko", "ar", "hi", "nl", "pl", "sv", "tr", "vi", "th", "uk",
+    "cs", "ro", "hu", "fi", "da", "no", "id", "ms", "bn", "fa",
+]
+
+_STATE_PROPS = {
+    State.IDLE:      (_IDLE_COLOR,      "Press to record", "#888888", "🎙"),
+    State.RECORDING: (_RECORDING_COLOR, "Recording...",    "#e94560", "🎙"),
+    State.TYPING:    (_TYPING_COLOR,    "Typing...",       "#0a84ff", "⌨️"),
+}
+
+
+class MurmurWindow(ctk.CTk):
+    def __init__(
+        self,
+        on_toggle: Callable[[], None],
+        on_settings_save: Callable[[str, str, bool], None],
+    ) -> None:
+        super().__init__()
+        self._on_toggle       = on_toggle
+        self._on_settings_save = on_settings_save
+        self._current_hotkey   = "ctrl+shift+space"
+        self._current_language = "auto"
+        self._current_login    = False
+        self._setup_window()
+        self._show_main()
+
+    # ------------------------------------------------------------------ window
+
+    def _setup_window(self) -> None:
+        self.title("MurmurAI")
+        self.geometry("240x290")
+        self.resizable(False, False)
+        self.protocol("WM_DELETE_WINDOW", self.withdraw)
+
+    # ----------------------------------------------------------- main card view
+
+    def _show_main(self) -> None:
+        for w in self.winfo_children():
+            w.destroy()
+
+        ctk.CTkLabel(
+            self, text="MURMURAI",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="#888888",
+        ).pack(pady=(22, 0))
+
+        self._mic_btn = ctk.CTkButton(
+            self, text="🎙", width=68, height=68,
+            corner_radius=34, font=ctk.CTkFont(size=28),
+            fg_color=_IDLE_COLOR, hover_color="#4a4a7a",
+            command=self._on_toggle,
+        )
+        self._mic_btn.pack(pady=18)
+
+        self._status_lbl = ctk.CTkLabel(
+            self, text="Press to record",
+            font=ctk.CTkFont(size=11), text_color="#888888",
+        )
+        self._status_lbl.pack()
+
+        self._hint_lbl = ctk.CTkLabel(
+            self, text=self._current_hotkey,
+            font=ctk.CTkFont(family="Courier", size=10), text_color="#444444",
+        )
+        self._hint_lbl.pack(pady=6)
+
+        bottom = ctk.CTkFrame(self, fg_color="transparent")
+        bottom.pack(side="bottom", fill="x", padx=16, pady=12)
+
+        self._lang_lbl = ctk.CTkLabel(
+            bottom, text=self._lang_display(),
+            font=ctk.CTkFont(size=10), text_color="#555555",
+        )
+        self._lang_lbl.pack(side="left")
+
+        ctk.CTkButton(
+            bottom, text="⚙", width=28, height=28,
+            fg_color="transparent", text_color="#555555",
+            hover_color="#2a2a4a", command=self._show_settings,
+        ).pack(side="right")
+
+    # ------------------------------------------------------------------ public
+
+    def update_state(self, state: State) -> None:
+        if not hasattr(self, "_mic_btn"):
+            return
+        color, label, text_color, icon = _STATE_PROPS[state]
+        self._mic_btn.configure(fg_color=color, text=icon)
+        self._status_lbl.configure(text=label, text_color=text_color)
+
+    def update_hotkey_hint(self, combo: str) -> None:
+        self._current_hotkey = combo
+        if hasattr(self, "_hint_lbl"):
+            self._hint_lbl.configure(text=combo)
+
+    def update_language_display(self, language: str) -> None:
+        self._current_language = language
+        if hasattr(self, "_lang_lbl"):
+            self._lang_lbl.configure(text=self._lang_display())
+
+    def _lang_display(self) -> str:
+        return f"🌐 {'Auto' if self._current_language == 'auto' else self._current_language.upper()}"
+
+    # --------------------------------------------------------- settings panel (stub — Task 11)
+
+    def _show_settings(self) -> None:
+        pass   # implemented in Task 11
