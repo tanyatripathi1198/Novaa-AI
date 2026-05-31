@@ -27,7 +27,7 @@ class TrayIcon:
             _make_icon_image(_COLORS["idle"]),
             "MurmurAI",
             menu=pystray.Menu(
-                pystray.MenuItem("Open", lambda icon, item: on_open()),
+                pystray.MenuItem("Open", lambda icon, item: on_open(), default=True),
                 pystray.MenuItem("Quit", lambda icon, item: on_quit()),
             ),
         )

@@ -19,10 +19,16 @@ from ui import MurmurWindow
 
 def _set_start_on_login(enabled: bool) -> None:
     key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+    # When frozen (PyInstaller), sys.executable IS the app.
+    # When running from source, we need python + script path.
+    if getattr(sys, "frozen", False):
+        exe_cmd = sys.executable
+    else:
+        exe_cmd = f'"{sys.executable}" "{Path(__file__).resolve()}"'
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE)
         if enabled:
-            winreg.SetValueEx(key, "MurmurAI", 0, winreg.REG_SZ, sys.executable)
+            winreg.SetValueEx(key, "MurmurAI", 0, winreg.REG_SZ, exe_cmd)
         else:
             try:
                 winreg.DeleteValue(key, "MurmurAI")
@@ -31,6 +37,19 @@ def _set_start_on_login(enabled: bool) -> None:
         winreg.CloseKey(key)
     except OSError:
         pass
+
+
+def _handle_download_error(root, exc: Exception) -> None:
+    import customtkinter as ctk
+    for w in root.winfo_children():
+        w.destroy()
+    ctk.CTkLabel(
+        root,
+        text=f"Download failed:\n{exc}\n\nCheck your internet connection and restart.",
+        wraplength=260,
+        text_color="#e94560",
+    ).pack(pady=20)
+    ctk.CTkButton(root, text="Quit", command=root.destroy).pack()
 
 
 def _show_download_screen() -> None:
@@ -47,8 +66,11 @@ def _show_download_screen() -> None:
     bar.start()
 
     def _download():
-        ensure_model()
-        root.after(0, root.destroy)
+        try:
+            ensure_model()
+            root.after(0, root.destroy)
+        except Exception as exc:
+            root.after(0, lambda e=exc: _handle_download_error(root, e))
 
     threading.Thread(target=_download, daemon=True).start()
     root.mainloop()
@@ -86,6 +108,7 @@ def main() -> None:
     window = MurmurWindow(
         on_toggle=lambda: controller.toggle(),
         on_settings_save=handle_settings_save,
+        start_on_login=settings.start_on_login,
     )
 
     def on_state_change(state: State) -> None:

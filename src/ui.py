@@ -2,6 +2,7 @@ from __future__ import annotations
 import customtkinter as ctk
 from typing import Callable, Optional
 from controller import State
+from hotkey import HotkeyManager
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -28,13 +29,14 @@ class MurmurWindow(ctk.CTk):
         self,
         on_toggle: Callable[[], None],
         on_settings_save: Callable[[str, str, bool], None],
+        start_on_login: bool = False,
     ) -> None:
         super().__init__()
-        self._on_toggle       = on_toggle
+        self._on_toggle        = on_toggle
         self._on_settings_save = on_settings_save
         self._current_hotkey   = "ctrl+shift+space"
         self._current_language = "auto"
-        self._current_login    = False
+        self._current_login    = start_on_login
         self._setup_window()
         self._show_main()
 
@@ -168,9 +170,12 @@ class MurmurWindow(ctk.CTk):
         return "break"
 
     def _save_settings(self) -> None:
-        hotkey   = self._hk_entry.get()
+        hotkey   = self._hk_entry.get().strip()
         language = self._lang_menu.get()
         login    = self._login_var.get()
+        if not hotkey or not HotkeyManager.is_valid(hotkey):
+            self._hk_entry.configure(border_color="#e94560")
+            return
         self._current_hotkey   = hotkey
         self._current_language = language
         self._current_login    = login
