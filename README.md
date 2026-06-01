@@ -7,11 +7,13 @@ A Windows voice-to-text dictation app that transcribes speech locally using Open
 ## Features
 
 - **Global hotkey** — press `Ctrl+Shift+Space` from anywhere to start/stop recording (fully customizable)
+- **Wake word** — say "Hey Nova" to start recording hands-free (requires OpenWakeWord model file)
 - **Local transcription** — Whisper small model runs entirely on your machine; nothing leaves your device
 - **Works everywhere** — pastes into any app: browsers, editors, VS Code (editor and terminal), Notepad, Office, terminals
 - **Language support** — auto-detect or pin to any of 60+ languages
 - **System tray** — lives quietly in the tray; hotkey works even when the window is hidden
-- **Dark UI** — small card window with recording state indicator
+- **Elegant UI** — minimal dark card with N logo, state-aware mic button, sound feedback
+- **Sound effects** — ascending beep on recording start, low beep on stop
 
 ---
 
@@ -42,7 +44,7 @@ First run downloads the Whisper model (~500 MB) automatically.
 python src/main.py
 ```
 
-The app appears as a small card window and a tray icon (bottom-right taskbar).
+The app appears as a small card window and an N-logo tray icon (bottom-right taskbar).
 
 ---
 
@@ -52,8 +54,10 @@ The app appears as a small card window and a tray icon (bottom-right taskbar).
 |---|---|
 | Start recording | Press `Ctrl+Shift+Space` (or click the mic button) |
 | Stop recording | Press `Ctrl+Shift+Space` again |
+| Wake word | Say "Hey Nova" — recording starts automatically |
 | Change hotkey | Click ⚙ → Hotkey field → press your combo → Save |
 | Change language | Click ⚙ → Language dropdown → Save |
+| Enable wake word | Click ⚙ → toggle "Wake word (Hey Nova)" → Save |
 | Hide to tray | Close the window |
 | Restore | Click the tray icon |
 | Quit | Right-click tray icon → Quit |
@@ -65,15 +69,27 @@ After stopping, text is pasted into whatever window has focus with a leading spa
 ## How it works
 
 ```
-Microphone (native device rate)
-  → sounddevice (energy-based VAD)
+Microphone (native device rate, e.g. 44.1kHz)
+  → sounddevice (energy-based VAD, fires after 500ms silence)
   → scipy polyphase resample to 16kHz
   → faster-whisper (Whisper small, int8, CPU)
   → pyperclip + Shift+Insert paste
   → Active window
 ```
 
-VAD fires after ~1 second of silence, sending the phrase to Whisper. Transcription takes ~70ms on a modern CPU. Total end-to-end latency is roughly 1–1.5 seconds after you finish speaking.
+VAD fires 500ms after speech ends, triggering transcription (~2.5s on CPU). Total end-to-end latency is roughly 3–4 seconds after you finish speaking on CPU hardware.
+
+**Wake word mode:** OpenWakeWord runs a separate background audio stream, detects "Hey Nova", and starts recording with a 1.5s silence window (auto-stops after phrase).
+
+---
+
+## Wake word setup
+
+1. Place your `.tflite` model file at `%APPDATA%\NovaaAI\` (e.g. `Hey_Nova_20260328_194345.tflite`)
+2. Open Novaa AI settings → toggle **"Wake word (Hey Nova)"** → Save
+3. Say **"Hey Nova"** — recording starts, text appears after a 1.5s pause
+
+The app uses [OpenWakeWord](https://github.com/dscripka/openWakeWord) with TFLite inference. Requires `ai-edge-litert` (installed via requirements.txt).
 
 ---
 
@@ -95,12 +111,14 @@ pyinstaller novaaai.spec
 | `sounddevice` | Microphone capture at native device rate |
 | `scipy` | Polyphase audio resampling (44.1/48kHz → 16kHz) |
 | `numpy` | Audio buffer math |
-| `customtkinter` | Dark-theme UI |
+| `customtkinter` | Elegant dark UI |
 | `pynput` | Global hotkey listener |
 | `pystray` | System tray icon |
-| `Pillow` | Tray icon rendering |
+| `Pillow` | N-logo icon rendering |
 | `pyperclip` | Clipboard write |
 | `pyautogui` | Shift+Insert paste simulation |
+| `openwakeword` | Wake word detection engine |
+| `ai-edge-litert` | TFLite runtime for wake word models |
 
 ---
 
@@ -110,7 +128,7 @@ pyinstaller novaaai.spec
 python -m pytest tests/ -v
 ```
 
-36 unit tests covering settings, audio VAD, transcription, text injection, hotkey, and the controller state machine.
+48 unit tests covering settings, audio VAD, transcription, text injection, hotkey, controller state machine, and wake word listener.
 
 ---
 
@@ -122,7 +140,8 @@ Stored at `%APPDATA%\NovaaAI\settings.json`:
 {
   "hotkey": "ctrl+shift+space",
   "language": "auto",
-  "start_on_login": false
+  "start_on_login": false,
+  "wake_word_enabled": false
 }
 ```
 
@@ -131,6 +150,6 @@ Stored at `%APPDATA%\NovaaAI\settings.json`:
 ## Limitations
 
 - Windows only
-- CPU transcription: ~1–1.5s latency per phrase (GPU would be near-instant)
-- Whisper small model: good accuracy for clear speech; struggles with heavy accents or very fast speech
-- VS Code terminal: uses `Shift+Insert` paste (standard), which works in most terminal emulators
+- CPU transcription: ~2.5s fixed overhead per phrase (Whisper always processes a 30s internal window); GPU would be near-instant
+- Whisper small model: good accuracy for clear speech; may struggle with heavy accents or very fast speech
+- Wake word model quality depends on training data; test with `python test_wakeword.py` if detection is poor
