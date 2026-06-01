@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typing import Optional, Type
 import numpy as np
@@ -6,13 +7,15 @@ import numpy as np
 MODEL_NAME = "small"
 _MODEL_DIR = str(Path(os.environ.get("APPDATA", Path.home())) / "MurmurAI" / "models")
 
-# Common Whisper hallucinations on short/silent audio — suppress these
+# Common Whisper hallucinations on short/silent/unclear audio — suppress these
 _HALLUCINATIONS = {
     "thank you.", "thank you", "thanks.", "thanks",
+    "thank you very much.", "thank you very much", "thank you very",
     "thank you for watching.", "thank you for watching",
     "thanks for watching.", "thanks for watching",
     "you", "you.", "bye.", "bye", "goodbye.", "goodbye",
-    ".", "..", "...", "♪", "♪♪",
+    "please subscribe.", "please subscribe",
+    ".", "..", "...", "♪", "♪♪", "[music]", "[applause]",
 }
 
 
@@ -51,12 +54,13 @@ class Transcriber:
         segments, _ = self._model.transcribe(
             audio,
             language=self._language,
-            beam_size=5,
-            vad_filter=True,              # strips trailing silence → prevents "Thank you" hallucinations
+            beam_size=2,                  # balance: faster than 5, better than 1
+            vad_filter=True,              # strips trailing silence → prevents hallucinations
             vad_parameters={"min_silence_duration_ms": 500},
             condition_on_previous_text=False,
         )
-        text = "".join(s.text for s in segments).strip()
+        # Collapse whitespace from segment gaps, then strip
+        text = re.sub(r"\s+", " ", "".join(s.text for s in segments)).strip()
         return "" if _is_hallucination(text) else text
 
     def set_language(self, language: str) -> None:
