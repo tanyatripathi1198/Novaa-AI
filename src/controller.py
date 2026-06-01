@@ -4,8 +4,6 @@ from enum import Enum
 from typing import Callable, Optional
 import numpy as np
 
-_MIN_TRAILING_SAMPLES = int(16_000 * 0.3)   # ignore < 300ms trailing buffer
-
 
 class State(Enum):
     IDLE      = "idle"
@@ -50,13 +48,11 @@ class Controller:
 
     def _end_recording(self) -> None:
         try:
-            remainder = self._audio.stop()
+            self._audio.stop()   # fires chunk_callback for any buffered speech
         except Exception:
-            remainder = np.zeros(0, dtype=np.float32)
+            pass
         self._set_state(State.TYPING)
-        if len(remainder) >= _MIN_TRAILING_SAMPLES:
-            self._q.put(remainder)
-        self._q.put(None)                          # sentinel — ends worker
+        self._q.put(None)        # sentinel — ends transcription worker
         worker_snapshot = self._worker
         threading.Thread(target=self._await_idle, args=(worker_snapshot,), daemon=True).start()
 
