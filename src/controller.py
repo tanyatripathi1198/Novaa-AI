@@ -39,6 +39,16 @@ class Controller:
             elif self._state == State.RECORDING:
                 self._end_recording()
 
+    def push_start(self) -> None:
+        """Push-to-talk: start recording when hotkey pressed."""
+        if self._state == State.IDLE:
+            self._begin_recording()
+
+    def push_stop(self) -> None:
+        """Push-to-talk: stop and transcribe immediately when hotkey released."""
+        if self._state == State.RECORDING:
+            self._end_recording()
+
     def _begin_recording(self) -> None:
         self._q = queue.Queue()
         self._worker = threading.Thread(target=self._transcribe_loop, daemon=True)

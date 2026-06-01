@@ -12,6 +12,7 @@ class Settings:
     hotkey: str = "ctrl+shift+space"
     language: str = "auto"
     start_on_login: bool = False
+    recording_mode: str = "toggle"
 
 
 def load() -> Settings:

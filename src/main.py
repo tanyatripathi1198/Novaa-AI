@@ -94,21 +94,27 @@ def main() -> None:
     controller: Controller  # forward declaration for type checkers
     tray: Optional[TrayIcon] = None
 
-    def handle_settings_save(hotkey: str, language: str, start_on_login: bool) -> None:
-        settings.hotkey        = hotkey
-        settings.language      = language
-        settings.start_on_login = start_on_login
+    def handle_settings_save(hotkey: str, language: str, start_on_login: bool, recording_mode: str) -> None:
+        settings.hotkey          = hotkey
+        settings.language        = language
+        settings.start_on_login  = start_on_login
+        settings.recording_mode  = recording_mode
         save_settings(settings)
-        hotkey_mgr.register(hotkey, controller.toggle)
+        if recording_mode == "push_to_talk":
+            hotkey_mgr.register_push_to_talk(hotkey, controller.push_start, controller.push_stop)
+        else:
+            hotkey_mgr.register(hotkey, controller.toggle)
         transcriber.set_language(language)
         window.update_hotkey_hint(hotkey)
         window.update_language_display(language)
+        window.update_mode_display(recording_mode)
         _set_start_on_login(start_on_login)
 
     window = MurmurWindow(
         on_toggle=lambda: controller.toggle(),
         on_settings_save=handle_settings_save,
         start_on_login=settings.start_on_login,
+        recording_mode=settings.recording_mode,
     )
 
     def on_state_change(state: State) -> None:
@@ -132,7 +138,12 @@ def main() -> None:
     )
     tray.start()
 
-    hotkey_mgr.register(settings.hotkey, controller.toggle)
+    if settings.recording_mode == "push_to_talk":
+        hotkey_mgr.register_push_to_talk(
+            settings.hotkey, controller.push_start, controller.push_stop
+        )
+    else:
+        hotkey_mgr.register(settings.hotkey, controller.toggle)
     window.update_hotkey_hint(settings.hotkey)
     window.update_language_display(settings.language)
 

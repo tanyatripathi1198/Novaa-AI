@@ -28,8 +28,9 @@ class MurmurWindow(ctk.CTk):
     def __init__(
         self,
         on_toggle: Callable[[], None],
-        on_settings_save: Callable[[str, str, bool], None],
+        on_settings_save: Callable[[str, str, bool, str], None],
         start_on_login: bool = False,
+        recording_mode: str = "toggle",
     ) -> None:
         super().__init__()
         self._on_toggle        = on_toggle
@@ -37,6 +38,7 @@ class MurmurWindow(ctk.CTk):
         self._current_hotkey   = "ctrl+shift+space"
         self._current_language = "auto"
         self._current_login    = start_on_login
+        self._current_mode     = recording_mode
         self._setup_window()
         self._show_main()
 
@@ -141,6 +143,12 @@ class MurmurWindow(ctk.CTk):
         self._lang_menu.pack(fill="x", padx=24)
         self._lang_menu.set(self._current_language)
 
+        ctk.CTkLabel(self, text="Recording Mode", font=ctk.CTkFont(size=10),
+                     text_color="#666666").pack(anchor="w", padx=24, pady=(12, 2))
+        self._mode_menu = ctk.CTkOptionMenu(self, values=["Toggle", "Hold to talk"])
+        self._mode_menu.pack(fill="x", padx=24)
+        self._mode_menu.set("Hold to talk" if self._current_mode == "push_to_talk" else "Toggle")
+
         self._login_var = ctk.BooleanVar(value=self._current_login)
         ctk.CTkSwitch(
             self, text="Start on login", variable=self._login_var,
@@ -176,8 +184,13 @@ class MurmurWindow(ctk.CTk):
         if not hotkey or not HotkeyManager.is_valid(hotkey):
             self._hk_entry.configure(border_color="#e94560")
             return
+        mode = "push_to_talk" if self._mode_menu.get() == "Hold to talk" else "toggle"
         self._current_hotkey   = hotkey
         self._current_language = language
         self._current_login    = login
-        self._on_settings_save(hotkey, language, login)
+        self._current_mode     = mode
+        self._on_settings_save(hotkey, language, login, mode)
         self._show_main()
+
+    def update_mode_display(self, mode: str) -> None:
+        self._current_mode = mode
