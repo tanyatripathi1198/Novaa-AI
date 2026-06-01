@@ -83,3 +83,17 @@ def test_stop_returns_empty_array_and_closes_stream():
     assert len(result) == 0
     mock_stream.stop.assert_called_once()
     mock_stream.close.assert_called_once()
+
+
+def test_custom_silence_blocks_used_in_vad():
+    received = []
+    with patch("audio.sd") as mock_sd:
+        mock_sd.InputStream.return_value = MagicMock()
+        mock_sd.query_devices.return_value = {"default_samplerate": TARGET_RATE}
+        from audio import AudioCapture
+        cap = AudioCapture()
+        cap.start(chunk_callback=received.append, silence_blocks=3)
+        cb = mock_sd.InputStream.call_args.kwargs["callback"]
+        _feed_speech(cb, _MIN_SPEECH_BLOCKS + 1)
+        _feed_silence(cb, 3)
+    assert len(received) == 1

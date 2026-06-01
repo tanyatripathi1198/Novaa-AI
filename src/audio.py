@@ -23,10 +23,12 @@ class AudioCapture:
         self._silence_count: int = 0
         self._speech_count: int = 0
         self._speaking: bool = False
+        self._silence_blocks_to_end: int = 10
 
-    def start(self, chunk_callback: Callable[[np.ndarray], None]) -> None:
+    def start(self, chunk_callback: Callable[[np.ndarray], None], silence_blocks: int = 10) -> None:
         if self._stream is not None:
             raise RuntimeError("AudioCapture is already running; call stop() first")
+        self._silence_blocks_to_end = silence_blocks
         self._chunk_cb = chunk_callback
         self._speech_buf = []
         self._pre_buf = []
@@ -86,7 +88,7 @@ class AudioCapture:
         elif self._speaking:
             self._speech_buf.append(block)
             self._silence_count += 1
-            if self._silence_count >= _SILENCE_BLOCKS_TO_END:
+            if self._silence_count >= self._silence_blocks_to_end:
                 if self._speech_count >= _MIN_SPEECH_BLOCKS and self._chunk_cb:
                     self._chunk_cb(self._build_phrase())
                 self._speech_buf = []
