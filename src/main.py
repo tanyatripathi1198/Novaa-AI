@@ -15,6 +15,7 @@ from hotkey import HotkeyManager
 from controller import Controller, State
 from tray import TrayIcon
 from ui import MurmurWindow
+from wake_word import WakeWordListener, MODEL_PATH
 
 
 def _migrate_appdata() -> None:
@@ -107,22 +108,48 @@ def main() -> None:
     # because the lambda is only called after controller is created below.
     controller: Controller  # forward declaration for type checkers
     tray: Optional[TrayIcon] = None
+    wake_listener: Optional[WakeWordListener] = None
 
-    def handle_settings_save(hotkey: str, language: str, start_on_login: bool) -> None:
-        settings.hotkey        = hotkey
-        settings.language      = language
-        settings.start_on_login = start_on_login
+    def _start_wake_listener() -> None:
+        nonlocal wake_listener
+        if wake_listener:
+            wake_listener.stop()
+            wake_listener = None
+        if not Path(str(MODEL_PATH)).exists():
+            return
+        try:
+            wake_listener = WakeWordListener(
+                on_detect=lambda: (
+                    controller.wake_start()
+                    if controller.state == State.IDLE else None
+                ),
+            )
+            wake_listener.start()
+        except Exception:
+            wake_listener = None
+
+    def handle_settings_save(hotkey: str, language: str, start_on_login: bool, wake_word_enabled: bool) -> None:
+        settings.hotkey             = hotkey
+        settings.language           = language
+        settings.start_on_login     = start_on_login
+        settings.wake_word_enabled  = wake_word_enabled
         save_settings(settings)
         hotkey_mgr.register(hotkey, controller.toggle)
         transcriber.set_language(language)
         window.update_hotkey_hint(hotkey)
         window.update_language_display(language)
         _set_start_on_login(start_on_login)
+        if wake_word_enabled:
+            _start_wake_listener()
+        else:
+            if wake_listener:
+                wake_listener.stop()
 
     window = MurmurWindow(
         on_toggle=lambda: controller.toggle(),
         on_settings_save=handle_settings_save,
         start_on_login=settings.start_on_login,
+        wake_word_enabled=settings.wake_word_enabled,
     )
 
     def on_state_change(state: State) -> None:
@@ -137,6 +164,8 @@ def main() -> None:
 
     def quit_app() -> None:
         hotkey_mgr.unregister()
+        if wake_listener:
+            wake_listener.stop()
         tray.stop()
         window.after(0, window.destroy)
 
@@ -149,6 +178,9 @@ def main() -> None:
     hotkey_mgr.register(settings.hotkey, controller.toggle)
     window.update_hotkey_hint(settings.hotkey)
     window.update_language_display(settings.language)
+
+    if settings.wake_word_enabled:
+        _start_wake_listener()
 
     window.mainloop()
 
