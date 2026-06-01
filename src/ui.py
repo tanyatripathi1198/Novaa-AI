@@ -28,8 +28,9 @@ class MurmurWindow(ctk.CTk):
     def __init__(
         self,
         on_toggle: Callable[[], None],
-        on_settings_save: Callable[[str, str, bool], None],
+        on_settings_save: Callable[[str, str, bool, bool], None],
         start_on_login: bool = False,
+        wake_word_enabled: bool = False,
     ) -> None:
         super().__init__()
         self._on_toggle        = on_toggle
@@ -37,6 +38,7 @@ class MurmurWindow(ctk.CTk):
         self._current_hotkey   = "ctrl+shift+space"
         self._current_language = "auto"
         self._current_login    = start_on_login
+        self._current_wake     = wake_word_enabled
         self._setup_window()
         self._show_main()
 
@@ -147,6 +149,12 @@ class MurmurWindow(ctk.CTk):
             font=ctk.CTkFont(size=11),
         ).pack(padx=24, pady=12, anchor="w")
 
+        self._wake_var = ctk.BooleanVar(value=self._current_wake)
+        ctk.CTkSwitch(
+            self, text="Wake word (Hey Pooky)", variable=self._wake_var,
+            font=ctk.CTkFont(size=11),
+        ).pack(padx=24, pady=(0, 8), anchor="w")
+
         row = ctk.CTkFrame(self, fg_color="transparent")
         row.pack(side="bottom", fill="x", padx=16, pady=12)
         ctk.CTkButton(row, text="Cancel", fg_color="#333333",
@@ -173,11 +181,13 @@ class MurmurWindow(ctk.CTk):
         hotkey   = self._hk_entry.get().strip()
         language = self._lang_menu.get()
         login    = self._login_var.get()
+        wake     = self._wake_var.get() if hasattr(self, "_wake_var") else self._current_wake
         if not hotkey or not HotkeyManager.is_valid(hotkey):
             self._hk_entry.configure(border_color="#e94560")
             return
         self._current_hotkey   = hotkey
         self._current_language = language
         self._current_login    = login
-        self._on_settings_save(hotkey, language, login)
+        self._current_wake     = wake
+        self._on_settings_save(hotkey, language, login, wake)
         self._show_main()
