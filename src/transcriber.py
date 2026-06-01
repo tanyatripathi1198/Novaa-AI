@@ -42,9 +42,9 @@ class Transcriber:
         segments, _ = self._model.transcribe(
             audio,
             language=self._language,
-            beam_size=1,
-            vad_filter=True,
-            vad_parameters={"min_silence_duration_ms": 300},
+            beam_size=5,
+            vad_filter=False,             # we do our own VAD in audio.py
+            condition_on_previous_text=False,
         )
         return "".join(s.text for s in segments).strip()
 
