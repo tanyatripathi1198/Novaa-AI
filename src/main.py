@@ -181,7 +181,8 @@ def main() -> None:
     window.update_language_display(settings.language)
 
     if settings.wake_word_enabled:
-        _start_wake_listener()
+        # Load wake word model in background so window appears immediately
+        threading.Thread(target=_start_wake_listener, daemon=True).start()
 
     window.mainloop()
 
