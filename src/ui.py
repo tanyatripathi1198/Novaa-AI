@@ -14,9 +14,9 @@ LANGUAGES = [
 ]
 
 _STATE_PROPS = {
-    State.IDLE:      ("#16161e", "#ffffff18", "#ffffff44", "Press to record", "🎙"),
-    State.RECORDING: ("#1c0d10", "#ff607855", "#ff8090",   "Recording",       "🎙"),
-    State.TYPING:    ("#0d1018", "#5090ff55", "#7ab0ff",   "Typing",          "⌨️"),
+    State.IDLE:      ("#16161e", "#222226", "#4c4c50", "Press to record", "🎙"),
+    State.RECORDING: ("#1c0d10", "#5c2832", "#ff8090",   "Recording",       "🎙"),
+    State.TYPING:    ("#0d1018", "#22375f", "#7ab0ff",   "Typing",          "⌨️"),
 }
 
 
@@ -68,10 +68,10 @@ class NovaaAIWindow(ctk.CTk):
 
         ctk.CTkLabel(bar, text="NOVAA AI",
                      font=ctk.CTkFont(size=9, weight="normal"),
-                     text_color="#ffffff44").pack(side="left", pady=11)
+                     text_color="#4c4c50").pack(side="left", pady=11)
 
         # Thin separator
-        sep = ctk.CTkFrame(self, height=1, fg_color="#ffffff0d", corner_radius=0)
+        sep = ctk.CTkFrame(self, height=1, fg_color="#171719", corner_radius=0)
         sep.pack(fill="x")
 
         # ── mic button ──
@@ -85,8 +85,8 @@ class NovaaAIWindow(ctk.CTk):
             fg_color="#16161e",
             hover_color="#222230",
             border_width=1,
-            border_color="#ffffff18",
-            text_color="#ffffff99",
+            border_color="#222226",
+            text_color="#9c9c9f",
             command=self._on_toggle,
         )
         self._mic_btn.pack(anchor="center")
@@ -95,14 +95,14 @@ class NovaaAIWindow(ctk.CTk):
         self._status_lbl = ctk.CTkLabel(
             self, text="Press to record",
             font=ctk.CTkFont(size=10, weight="normal"),
-            text_color="#ffffff44",
+            text_color="#4c4c50",
         )
         self._status_lbl.pack(pady=(16, 0))
 
         self._hint_lbl = ctk.CTkLabel(
             self, text=self._current_hotkey,
             font=ctk.CTkFont(family="Courier New", size=9),
-            text_color="#ffffff1a",
+            text_color="#242428",
         )
         self._hint_lbl.pack(pady=(5, 0))
 
@@ -112,14 +112,14 @@ class NovaaAIWindow(ctk.CTk):
 
         self._lang_lbl = ctk.CTkLabel(
             footer, text=self._lang_display(),
-            font=ctk.CTkFont(size=9), text_color="#ffffff28",
+            font=ctk.CTkFont(size=9), text_color="#313135",
         )
         self._lang_lbl.pack(side="left")
 
         ctk.CTkButton(
             footer, text="⚙", width=26, height=26,
-            fg_color="transparent", hover_color="#ffffff0a",
-            text_color="#ffffff28", font=ctk.CTkFont(size=11),
+            fg_color="transparent", hover_color="#141418",
+            text_color="#313135", font=ctk.CTkFont(size=11),
             command=self._show_settings,
         ).pack(side="right")
 
@@ -165,19 +165,19 @@ class NovaaAIWindow(ctk.CTk):
         ctk.CTkLabel(logo_box, text="N", font=ctk.CTkFont(size=13, weight="bold"),
                      text_color="#0b0b0f").place(relx=0.5, rely=0.5, anchor="center")
         ctk.CTkLabel(bar, text="SETTINGS",
-                     font=ctk.CTkFont(size=9), text_color="#ffffff33").pack(side="left", pady=11)
-        sep = ctk.CTkFrame(self, height=1, fg_color="#ffffff0d", corner_radius=0)
+                     font=ctk.CTkFont(size=9), text_color="#3c3c3f").pack(side="left", pady=11)
+        sep = ctk.CTkFrame(self, height=1, fg_color="#171719", corner_radius=0)
         sep.pack(fill="x")
 
         pad = {"padx": 20}
 
         # Hotkey
         ctk.CTkLabel(self, text="HOTKEY", font=ctk.CTkFont(size=8),
-                     text_color="#ffffff33").pack(anchor="w", pady=(14, 3), **pad)
+                     text_color="#3c3c3f").pack(anchor="w", pady=(14, 3), **pad)
         self._hk_entry = ctk.CTkEntry(
             self, font=ctk.CTkFont(family="Courier New", size=10),
-            fg_color="#ffffff07", border_color="#ffffff12",
-            text_color="#ffffff66", height=30,
+            fg_color="#111115", border_color="#1c1c20",
+            text_color="#6c6c70", height=30,
         )
         self._hk_entry.pack(fill="x", **pad)
         self._hk_entry.insert(0, self._current_hotkey)
@@ -185,12 +185,12 @@ class NovaaAIWindow(ctk.CTk):
 
         # Language
         ctk.CTkLabel(self, text="LANGUAGE", font=ctk.CTkFont(size=8),
-                     text_color="#ffffff33").pack(anchor="w", pady=(10, 3), **pad)
+                     text_color="#3c3c3f").pack(anchor="w", pady=(10, 3), **pad)
         self._lang_menu = ctk.CTkOptionMenu(
             self, values=LANGUAGES, height=30,
-            fg_color="#ffffff07", button_color="#ffffff0f",
-            button_hover_color="#ffffff18",
-            text_color="#ffffff66", dropdown_fg_color="#111118",
+            fg_color="#111115", button_color="#191920",
+            button_hover_color="#222226",
+            text_color="#6c6c70", dropdown_fg_color="#111115",
         )
         self._lang_menu.pack(fill="x", **pad)
         self._lang_menu.set(self._current_language)
@@ -199,19 +199,19 @@ class NovaaAIWindow(ctk.CTk):
         self._login_var = ctk.BooleanVar(value=self._current_login)
         ctk.CTkSwitch(
             self, text="Start on login",
-            font=ctk.CTkFont(size=10), text_color="#ffffff44",
+            font=ctk.CTkFont(size=10), text_color="#4c4c50",
             variable=self._login_var,
-            button_color="#ffffff66", button_hover_color="#ffffffaa",
-            progress_color="#ffffff33",
+            button_color="#6c6c70", button_hover_color="#ababae",
+            progress_color="#3c3c3f",
         ).pack(anchor="w", pady=(12, 0), **pad)
 
         self._wake_var = ctk.BooleanVar(value=self._current_wake)
         ctk.CTkSwitch(
             self, text="Wake word (Hey Nova)",
-            font=ctk.CTkFont(size=10), text_color="#ffffff44",
+            font=ctk.CTkFont(size=10), text_color="#4c4c50",
             variable=self._wake_var,
-            button_color="#ffffff66", button_hover_color="#ffffffaa",
-            progress_color="#ffffff33",
+            button_color="#6c6c70", button_hover_color="#ababae",
+            progress_color="#3c3c3f",
         ).pack(anchor="w", pady=(8, 0), **pad)
 
         # Buttons
@@ -219,13 +219,13 @@ class NovaaAIWindow(ctk.CTk):
         row.pack(side="bottom", fill="x", padx=16, pady=14)
         ctk.CTkButton(
             row, text="Cancel", height=32,
-            fg_color="#ffffff0a", hover_color="#ffffff14",
-            text_color="#ffffff44", font=ctk.CTkFont(size=10),
+            fg_color="#141418", hover_color="#1e1e22",
+            text_color="#4c4c50", font=ctk.CTkFont(size=10),
             command=self._show_main,
         ).pack(side="left", expand=True, padx=(0, 4))
         ctk.CTkButton(
             row, text="Save", height=32,
-            fg_color="#ffffffee", hover_color="#cccccc",
+            fg_color="#eeeeee", hover_color="#cccccc",
             text_color="#0b0b0f", font=ctk.CTkFont(size=10, weight="bold"),
             command=self._save_settings,
         ).pack(side="right", expand=True, padx=(4, 0))
