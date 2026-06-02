@@ -118,14 +118,14 @@ class NovaaAIWindow(ctk.CTk):
 
         self._lang_lbl = ctk.CTkLabel(
             footer, text=self._lang_display(),
-            font=ctk.CTkFont(size=8), text_color="#3c3c3f",
+            font=ctk.CTkFont(size=9), text_color="#4a7aaa",
         )
         self._lang_lbl.pack(side="left")
 
         ctk.CTkButton(
-            footer, text="⚙", width=24, height=24,
-            fg_color="transparent", hover_color="#141418",
-            text_color="#37373a", font=ctk.CTkFont(size=10),
+            footer, text="⚙", width=28, height=28,
+            fg_color="transparent", hover_color="#1a1a22",
+            text_color="#666672", font=ctk.CTkFont(size=14),
             command=self._show_settings,
         ).pack(side="right")
 
