@@ -76,26 +76,19 @@ class NovaaAIWindow(ctk.CTk):
         # 1px separator line
         ctk.CTkFrame(self, height=1, fg_color="#1c1c20", corner_radius=0).pack(fill="x")
 
-        # ── mic button — ring frame drives the glow border color ──
-        self._mic_ring = ctk.CTkFrame(
-            self, width=78, height=78,
-            fg_color="#141419", corner_radius=39,
-            border_width=1, border_color="#2a2a32",
-        )
-        self._mic_ring.pack(pady=(28, 0))
-        self._mic_ring.pack_propagate(False)
-
+        # ── mic button — single widget, border drawn by CTk (no nesting overlap) ──
         self._mic_btn = ctk.CTkButton(
-            self._mic_ring, text="🎙", width=66, height=66,
-            corner_radius=33,
-            font=ctk.CTkFont(size=24),
-            fg_color="#0b0b0f",
-            hover_color="#1a1a22",
-            border_width=0,
+            self, text="🎙", width=80, height=80,
+            corner_radius=40,
+            font=ctk.CTkFont(size=26),
+            fg_color="#141419",
+            hover_color="#1e1e28",
+            border_width=2,
+            border_color="#2a2a32",
             text_color=_ICON_COLOR,
             command=self._on_toggle,
         )
-        self._mic_btn.place(relx=0.5, rely=0.5, anchor="center")
+        self._mic_btn.pack(pady=(28, 0))
 
         # ── status: uppercase, letter-spaced feel ──
         self._status_lbl = ctk.CTkLabel(
@@ -145,10 +138,11 @@ class NovaaAIWindow(ctk.CTk):
         if not hasattr(self, "_mic_btn"):
             return
         ring_color, ring_width, label, status_color, icon = _STATE_PROPS[state]
-        # Only the ring border changes — icon stays muted white always
-        if hasattr(self, "_mic_ring"):
-            self._mic_ring.configure(border_color=ring_color, border_width=ring_width)
-        self._mic_btn.configure(text=icon, text_color=_ICON_COLOR)
+        # Border changes colour/width — icon stays muted white always
+        self._mic_btn.configure(
+            border_color=ring_color, border_width=ring_width,
+            text=icon, text_color=_ICON_COLOR,
+        )
         self._status_lbl.configure(text=label, text_color=status_color)
         if hasattr(self, "_hint_lbl"):
             self._hint_lbl.configure(
