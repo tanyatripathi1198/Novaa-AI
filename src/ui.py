@@ -42,7 +42,7 @@ class NovaaAIWindow(ctk.CTk):
 
     def _setup_window(self) -> None:
         self.title("Novaa AI")
-        self.geometry("240x265")
+        self.geometry("240x275")
         self.resizable(False, False)
         self.configure(fg_color="#0b0b0f")
         self.protocol("WM_DELETE_WINDOW", self.withdraw)
@@ -50,7 +50,7 @@ class NovaaAIWindow(ctk.CTk):
     # ── main card ───────────────────────────────────────────────────────
 
     def _show_main(self) -> None:
-        self.geometry("240x265")
+        self.geometry("240x275")
         for w in self.winfo_children():
             w.destroy()
 
@@ -112,9 +112,9 @@ class NovaaAIWindow(ctk.CTk):
         )
         self._hint_lbl.pack(padx=8, pady=3)
 
-        # ── footer ──
+        # ── footer — packed inline (not side=bottom) to avoid DPI clipping ──
         footer = ctk.CTkFrame(self, fg_color="#0b0b0f", corner_radius=0)
-        footer.pack(side="bottom", fill="x", padx=16, pady=12)
+        footer.pack(fill="x", padx=16, pady=(12, 14))
 
         # Language: globe icon in blue, text in muted white
         lang_row = ctk.CTkFrame(footer, fg_color="transparent")
