@@ -14,9 +14,9 @@ LANGUAGES = [
 ]
 
 _STATE_PROPS = {
-    State.IDLE:      ("#16161e", "#222226", "#4c4c50", "Press to record", "🎙"),
-    State.RECORDING: ("#1c0d10", "#5c2832", "#ff8090",   "Recording",       "🎙"),
-    State.TYPING:    ("#0d1018", "#22375f", "#7ab0ff",   "Typing",          "⌨️"),
+    State.IDLE:      ("#16161e", "#222226", "#545457", "PRESS TO RECORD", "🎙"),
+    State.RECORDING: ("#1c0d10", "#5c2832", "#ff8090", "RECORDING",       "🎙"),
+    State.TYPING:    ("#0d1018", "#22375f", "#7ab0ff",  "TYPING",          "⌨️"),
 }
 
 
@@ -42,7 +42,7 @@ class NovaaAIWindow(ctk.CTk):
 
     def _setup_window(self) -> None:
         self.title("Novaa AI")
-        self.geometry("240x300")
+        self.geometry("240x265")
         self.resizable(False, False)
         self.configure(fg_color="#0b0b0f")
         self.protocol("WM_DELETE_WINDOW", self.withdraw)
@@ -50,76 +50,82 @@ class NovaaAIWindow(ctk.CTk):
     # ── main card ───────────────────────────────────────────────────────
 
     def _show_main(self) -> None:
-        self.geometry("240x300")
+        self.geometry("240x265")
         for w in self.winfo_children():
             w.destroy()
 
-        # ── top bar ──
+        # ── top bar (14px padding, 44px height) ──
         bar = ctk.CTkFrame(self, fg_color="#0b0b0f", corner_radius=0, height=44)
         bar.pack(fill="x")
         bar.pack_propagate(False)
 
-        # Logo box
-        logo_box = ctk.CTkFrame(bar, width=22, height=22, fg_color="#ffffff", corner_radius=5)
-        logo_box.pack(side="left", padx=(14, 8), pady=11)
+        # Logo box: 22×22 white rounded square with bold N
+        logo_box = ctk.CTkFrame(bar, width=22, height=22, fg_color="#ffffff", corner_radius=6)
+        logo_box.pack(side="left", padx=(14, 10), pady=11)
         logo_box.pack_propagate(False)
         ctk.CTkLabel(logo_box, text="N", font=ctk.CTkFont(size=13, weight="bold"),
                      text_color="#0b0b0f").place(relx=0.5, rely=0.5, anchor="center")
 
+        # App name: thin, muted, uppercase — matches mockup letter-spacing feel
         ctk.CTkLabel(bar, text="NOVAA AI",
                      font=ctk.CTkFont(size=9, weight="normal"),
-                     text_color="#4c4c50").pack(side="left", pady=11)
+                     text_color="#6d6d6f").pack(side="left", pady=11)
 
-        # Thin separator
-        sep = ctk.CTkFrame(self, height=1, fg_color="#171719", corner_radius=0)
-        sep.pack(fill="x")
+        # 1px separator line
+        ctk.CTkFrame(self, height=1, fg_color="#1c1c20", corner_radius=0).pack(fill="x")
 
-        # ── mic button ──
+        # ── mic button (28px top padding, centred) ──
         btn_frame = ctk.CTkFrame(self, fg_color="#0b0b0f", corner_radius=0)
         btn_frame.pack(fill="x", pady=(28, 0))
 
         self._mic_btn = ctk.CTkButton(
             btn_frame, text="🎙", width=72, height=72,
             corner_radius=36,
-            font=ctk.CTkFont(size=26),
-            fg_color="#16161e",
+            font=ctk.CTkFont(size=24),
+            fg_color="#1a1a22",
             hover_color="#222230",
             border_width=1,
-            border_color="#222226",
+            border_color="#232327",
             text_color="#9c9c9f",
             command=self._on_toggle,
         )
         self._mic_btn.pack(anchor="center")
 
-        # ── status + hint ──
+        # ── status: uppercase, letter-spaced feel ──
         self._status_lbl = ctk.CTkLabel(
-            self, text="Press to record",
-            font=ctk.CTkFont(size=10, weight="normal"),
-            text_color="#4c4c50",
+            self, text="PRESS TO RECORD",
+            font=ctk.CTkFont(size=9, weight="normal"),
+            text_color="#545457",
         )
         self._status_lbl.pack(pady=(16, 0))
 
-        self._hint_lbl = ctk.CTkLabel(
-            self, text=self._current_hotkey,
-            font=ctk.CTkFont(family="Courier New", size=9),
-            text_color="#242428",
+        # ── hotkey: subtle bordered chip (matches mockup exactly) ──
+        hk_chip = ctk.CTkFrame(
+            self, fg_color="#111115", corner_radius=2,
+            border_width=1, border_color="#1c1c20",
         )
-        self._hint_lbl.pack(pady=(5, 0))
+        hk_chip.pack(pady=(6, 0))
+        self._hint_lbl = ctk.CTkLabel(
+            hk_chip, text=self._current_hotkey,
+            font=ctk.CTkFont(family="Courier New", size=8),
+            text_color="#37373a",
+        )
+        self._hint_lbl.pack(padx=8, pady=3)
 
         # ── footer ──
         footer = ctk.CTkFrame(self, fg_color="#0b0b0f", corner_radius=0)
-        footer.pack(side="bottom", fill="x", padx=16, pady=14)
+        footer.pack(side="bottom", fill="x", padx=16, pady=12)
 
         self._lang_lbl = ctk.CTkLabel(
             footer, text=self._lang_display(),
-            font=ctk.CTkFont(size=9), text_color="#313135",
+            font=ctk.CTkFont(size=8), text_color="#3c3c3f",
         )
         self._lang_lbl.pack(side="left")
 
         ctk.CTkButton(
-            footer, text="⚙", width=26, height=26,
+            footer, text="⚙", width=24, height=24,
             fg_color="transparent", hover_color="#141418",
-            text_color="#313135", font=ctk.CTkFont(size=11),
+            text_color="#37373a", font=ctk.CTkFont(size=10),
             command=self._show_settings,
         ).pack(side="right")
 
@@ -134,6 +140,10 @@ class NovaaAIWindow(ctk.CTk):
             text=icon, text_color=text_color,
         )
         self._status_lbl.configure(text=label, text_color=text_color)
+        # Dim or highlight the hotkey chip to match the state
+        if hasattr(self, "_hint_lbl"):
+            chip_color = "#37373a" if state == State.IDLE else text_color
+            self._hint_lbl.configure(text_color=chip_color)
 
     def update_hotkey_hint(self, combo: str) -> None:
         self._current_hotkey = combo
@@ -151,7 +161,7 @@ class NovaaAIWindow(ctk.CTk):
     # ── settings panel ───────────────────────────────────────────────────
 
     def _show_settings(self) -> None:
-        self.geometry("240x370")
+        self.geometry("240x360")
         for w in self.winfo_children():
             w.destroy()
 
