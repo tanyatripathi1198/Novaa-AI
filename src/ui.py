@@ -93,7 +93,7 @@ class NovaaAIWindow(ctk.CTk):
 
         self._mic_btn = ctk.CTkButton(
             _btn_wrap, text="🎙", width=80, height=80,
-            corner_radius=40,
+            corner_radius=50,
             font=("Segoe UI Emoji", 26),
             fg_color="#141419",
             hover_color="#1e1e28",
