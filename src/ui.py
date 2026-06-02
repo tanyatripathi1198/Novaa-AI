@@ -13,11 +13,10 @@ LANGUAGES = [
     "cs", "ro", "hu", "fi", "da", "no", "id", "ms", "bn", "fa",
 ]
 
-# (btn_bg, btn_border, glow_ring, icon_color, status_text, icon)
 _STATE_PROPS = {
-    State.IDLE:      ("#141419", "#232327", "#0b0b0f", "#8a8a8d", "PRESS TO RECORD", "🎙"),
-    State.RECORDING: ("#200d14", "#5c2030", "#2a0f18", "#ff8090", "RECORDING",       "🎙"),
-    State.TYPING:    ("#0d1420", "#1a2e50", "#0d1828", "#7ab0ff", "TYPING",           "⌨️"),
+    State.IDLE:      ("#16161e", "#222226", "#545457", "PRESS TO RECORD", "🎙"),
+    State.RECORDING: ("#1c0d10", "#5c2832", "#ff8090", "RECORDING",       "🎙"),
+    State.TYPING:    ("#0d1018", "#22375f", "#7ab0ff",  "TYPING",          "⌨️"),
 }
 
 
@@ -75,35 +74,22 @@ class NovaaAIWindow(ctk.CTk):
         # 1px separator line
         ctk.CTkFrame(self, height=1, fg_color="#1c1c20", corner_radius=0).pack(fill="x")
 
-        # ── mic button with glow ring (28px top padding, centred) ──
+        # ── mic button (28px top padding, centred) ──
         btn_frame = ctk.CTkFrame(self, fg_color="#0b0b0f", corner_radius=0)
         btn_frame.pack(fill="x", pady=(28, 0))
 
-        # Glow ring: 5px larger than button on each side.
-        # In idle it is invisible (same as bg). In recording/typing it becomes
-        # a coloured halo that matches the mockup's box-shadow glow effect.
-        self._mic_glow = ctk.CTkFrame(
-            btn_frame,
-            fg_color="#0b0b0f",   # idle = invisible
-            corner_radius=41,
-            width=82, height=82,
-        )
-        self._mic_glow.pack(anchor="center")
-        self._mic_glow.pack_propagate(False)
-
         self._mic_btn = ctk.CTkButton(
-            self._mic_glow,
-            text="🎙", width=72, height=72,
+            btn_frame, text="🎙", width=72, height=72,
             corner_radius=36,
             font=ctk.CTkFont(size=24),
-            fg_color="#141419",
-            hover_color="#1e1e28",
+            fg_color="#1a1a22",
+            hover_color="#222230",
             border_width=1,
             border_color="#232327",
-            text_color="#8a8a8d",
+            text_color="#9c9c9f",
             command=self._on_toggle,
         )
-        self._mic_btn.place(relx=0.5, rely=0.5, anchor="center")
+        self._mic_btn.pack(anchor="center")
 
         # ── status: uppercase, letter-spaced feel ──
         self._status_lbl = ctk.CTkLabel(
@@ -148,21 +134,16 @@ class NovaaAIWindow(ctk.CTk):
     def update_state(self, state: State) -> None:
         if not hasattr(self, "_mic_btn"):
             return
-        btn_bg, btn_border, glow_bg, icon_color, label, icon = _STATE_PROPS[state]
-        # Update glow ring (halo effect)
-        if hasattr(self, "_mic_glow"):
-            self._mic_glow.configure(fg_color=glow_bg)
-        # Update button
+        bg, border, text_color, label, icon = _STATE_PROPS[state]
         self._mic_btn.configure(
-            fg_color=btn_bg, border_color=btn_border,
-            text=icon, text_color=icon_color,
+            fg_color=bg, border_color=border,
+            text=icon, text_color=text_color,
         )
-        # Update status + hint
-        self._status_lbl.configure(text=label, text_color=icon_color)
+        self._status_lbl.configure(text=label, text_color=text_color)
+        # Dim or highlight the hotkey chip to match the state
         if hasattr(self, "_hint_lbl"):
-            self._hint_lbl.configure(
-                text_color="#37373a" if state == State.IDLE else icon_color
-            )
+            chip_color = "#37373a" if state == State.IDLE else text_color
+            self._hint_lbl.configure(text_color=chip_color)
 
     def update_hotkey_hint(self, combo: str) -> None:
         self._current_hotkey = combo
