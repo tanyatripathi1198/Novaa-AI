@@ -27,7 +27,7 @@ _ICON_COLOR = "#9c9c9f"   # icon stays muted white in every state
 _STATE_PROPS = {
     State.IDLE:      ("#2a2a32", 1, "#141419", _ls("PRESS TO RECORD"), "#545457", "🎙",    24),
     State.RECORDING: ("#60232a", 1, "#200d14", _ls("RECORDING"),       "#ff6070", "🎙",    24),
-    State.TYPING:    ("#203254", 1, "#0d1420", _ls("TYPING"),           "#7ab0ff", "⌨︎", 20),
+    State.TYPING:    ("#203254", 1, "#0d1420", _ls("TYPING"),           "#7ab0ff", "⌨️", 22),
 }
 
 
@@ -85,11 +85,16 @@ class NovaaAIWindow(ctk.CTk):
         # 1px separator line
         ctk.CTkFrame(self, height=1, fg_color="#1c1c20", corner_radius=0).pack(fill="x")
 
-        # ── mic button — single widget, border drawn by CTk (no nesting overlap) ──
+        # ── mic button — fixed-size square wrapper prevents oval distortion ──
+        # Without the wrapper, pack() allows horizontal stretching → oval shape
+        _btn_wrap = ctk.CTkFrame(self, fg_color="transparent", width=84, height=84)
+        _btn_wrap.pack(pady=(28, 0))
+        _btn_wrap.pack_propagate(False)
+
         self._mic_btn = ctk.CTkButton(
-            self, text="🎙", width=80, height=80,
+            _btn_wrap, text="🎙", width=80, height=80,
             corner_radius=40,
-            font=ctk.CTkFont(size=26),
+            font=("Segoe UI Emoji", 26),
             fg_color="#141419",
             hover_color="#1e1e28",
             border_width=2,
@@ -97,7 +102,7 @@ class NovaaAIWindow(ctk.CTk):
             text_color=_ICON_COLOR,
             command=self._on_toggle,
         )
-        self._mic_btn.pack(pady=(28, 0))
+        self._mic_btn.place(relx=0.5, rely=0.5, anchor="center")
 
         # ── status: uppercase, letter-spaced feel ──
         self._status_lbl = ctk.CTkLabel(
@@ -147,12 +152,14 @@ class NovaaAIWindow(ctk.CTk):
         if not hasattr(self, "_mic_btn"):
             return
         border_color, border_width, btn_bg, label, status_color, icon, icon_size = _STATE_PROPS[state]
+        # Segoe UI Emoji gives consistent centering for both mic and keyboard
+        font = ("Segoe UI Emoji", icon_size)
         # Background + border change per state; icon stays muted white always
         self._mic_btn.configure(
             fg_color=btn_bg,
             border_color=border_color, border_width=border_width,
             text=icon, text_color=_ICON_COLOR,
-            font=ctk.CTkFont(size=icon_size),
+            font=font,
         )
         self._status_lbl.configure(text=label, text_color=status_color)
         if hasattr(self, "_hint_lbl"):
